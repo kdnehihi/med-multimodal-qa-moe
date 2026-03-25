@@ -1,0 +1,21 @@
+seed: 42
+
+data:
+  train_path: data/processed/train.jsonl
+  val_path: data/processed/val.jsonl
+  raw_dir: data/raw
+  processed_dir: data/processed
+  image_size: 224
+
+model:
+  hidden_dim: 256
+  instruction_dim: 384
+  adapter_dim: 64
+  vision_encoder_name: clip-vit-base-patch32
+  language_model_name: t5-small
+
+training:
+  batch_size: 4
+  epochs: 5
+  learning_rate: 0.0001
+  device: cuda

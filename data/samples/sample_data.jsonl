@@ -1,0 +1,3 @@
+{"image": null, "question": "What can cause mild fever and cough?", "answer": "Common causes include viral infections, but symptoms should be evaluated in clinical context.", "task_type": "qa"}
+{"image": "data/samples/example_symptom.jpg", "question": "What does this skin rash suggest?", "answer": "The image may show a skin irritation, but a clinician should examine it for diagnosis.", "task_type": "symptom"}
+{"image": "data/samples/example_text_image.jpg", "question": "What key finding is written in this report image?", "answer": "The answer should summarize the medically relevant text seen in the image.", "task_type": "text_image"}
