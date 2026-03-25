@@ -1,0 +1,3 @@
+project_name: med-multimodal-qa-moe
+seed: 42
+# TODO: add shared defaults for model, data, and training.

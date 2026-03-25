@@ -1,0 +1,8 @@
+torch
+torchvision
+transformers
+pyyaml
+pillow
+tqdm
+pytest
+jupyter
