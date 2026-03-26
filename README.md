@@ -1,50 +1,135 @@
 # medical-moe-assistant
 
-Minimal research scaffold for a lightweight multimodal medical QA project with a simplified MoE-inspired design.
+Research scaffold for a lightweight multimodal medical QA project with a two-stage MoE-inspired architecture.
 
-## Project Idea
+## Overview
 
-This repository is a clean starter codebase for a medical QA system that can support:
+This project studies a compact medical assistant that supports three QA settings:
 
-- `symptom`: image + question -> free-text answer
-- `text_image`: image containing text -> free-text answer
-- `qa`: text-only medical question -> free-text answer
+- `symptom`: clinical image + question -> answer
+- `xray`: radiology image + question -> answer
+- `qa`: text-only medical question -> answer
 
-The current repository is intentionally a scaffold, not a finished implementation. Most modules contain clear TODO comments showing where model logic, routing, fusion, tokenization, and training should be added later.
+The repository is intentionally research-oriented and lightweight. The current codebase focuses on:
 
-## Architecture Overview
+- clean data preparation
+- reproducible dataset conversion
+- a minimal model scaffold with clear extension points
 
-Text-only architecture:
+It is not a production medical system.
 
-1. `VisionEncoder`
-   - shared visual backbone placeholder
-2. `VisionMoE`
-   - two virtual vision experts:
-     - `natural_image_head`
-     - `text_image_head`
-3. `Router`
-   - predicts:
-     - vision weights of size 2
-     - adapter weights of size 3
-4. `LanguageMoE`
-   - placeholder language backbone with adapter slots
-5. `MedicalMoEModel`
-   - ties together instruction embedding, routing, fusion, and generation
+## Current Data Setup
+
+The project currently uses three sources:
+
+1. `HealMQA`
+   - task: `symptom`
+   - local dataset under `data/raw/share healmqa/`
+   - processed output:
+     - `data/processed/healmqa_500.jsonl`
+     - `data/processed/healmqa_500_images/`
+
+2. `VQA-RAD`
+   - task: `xray`
+   - loaded from Hugging Face: `flaviagiammarino/vqa-rad`
+   - processed output:
+     - `data/processed/vqa_rad_500.jsonl`
+     - `data/processed/vqa_rad_500_images/`
+
+3. `MedQuAD`
+   - task: `qa`
+   - loaded from Hugging Face: `Tonic/medquad`
+   - processed output:
+     - `data/processed/medquad_500.jsonl`
+
+After preparation, the three datasets can be merged and shuffled into:
+
+- `data/processed/train_merged.jsonl`
+
+This merged file keeps only the three core fields:
+
+- `image`
+- `question`
+- `answer`
 
 ## Data Format
 
-Each JSONL sample should look like:
+Each processed sample follows:
 
 ```json
 {
   "image": "path_or_none",
   "question": "What is shown in this image?",
-  "answer": "Free-text answer",
-  "task_type": "symptom"
+  "answer": "Free-text answer"
 }
 ```
 
-## How To Run
+For text-only QA, `image` is `null`.
+
+## MoE Direction
+
+The current project direction is a two-stage MoE-inspired design:
+
+### Stage 1: Soft visual routing
+
+For image-question samples:
+
+- the image is encoded by two parallel image encoders
+- the question is encoded by a shared text encoder
+- a soft router uses the question embedding to assign weights over the two visual embeddings
+- the weighted visual feature is fused with the question feature
+
+For text-only samples:
+
+- the first-stage visual routing is skipped
+- the shared text embedding is used directly
+
+### Stage 2: Hard expert routing
+
+After a shared representation is obtained:
+
+- a hard router selects exactly one downstream expert
+- the selected expert performs task-specific reasoning before answer generation
+
+This design aims to balance:
+
+- adaptability across different image types
+- specialization across tasks
+- parameter efficiency for low-resource training
+
+## Repository Structure
+
+```text
+medical-moe-assistant/
+├── README.md
+├── requirements.txt
+├── config/
+│   └── config.yaml
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── samples/
+├── scripts/
+│   ├── download_data.py
+│   ├── preprocess.py
+│   ├── prepare_healmqa.py
+│   ├── prepare_medquad.py
+│   ├── prepare_textvqa_medical_subset.py
+│   ├── merge_datasets.py
+│   ├── preview_data.py
+│   └── train.py
+├── models/
+├── datasets/
+├── trainers/
+├── utils/
+└── notebooks/
+```
+
+Note:
+
+- `prepare_textvqa_medical_subset.py` now reuses the old script path but currently prepares a `VQA-RAD` subset.
+
+## Setup
 
 Install dependencies:
 
@@ -52,59 +137,76 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run placeholder scripts:
+## Data Preparation Workflow
 
-```bash
-python scripts/download_data.py
-python scripts/preprocess.py --input data/raw/your_data.jsonl
-python scripts/train.py --config config/config.yaml
-```
-
-Prepare HealMQA symptom-image QA data:
+### 1. Prepare HealMQA
 
 ```bash
 python scripts/prepare_healmqa.py
 ```
 
-Prepare text-only medical QA data:
+### 2. Prepare VQA-RAD
 
 ```bash
-python scripts/prepare_medquad.py
+python scripts/prepare_textvqa_medical_subset.py
 ```
 
-Preview raw TextVQA samples:
-
-```bash
-python scripts/preview_data.py --source hf --splits train --limit 5
-```
-
-Preview exported medical subset samples:
-
-```bash
-python scripts/preview_data.py --source jsonl --jsonl-path data/processed/textvqa_medical_500.jsonl --limit 5
-```
-
-Prepare a medical subset from VQA-RAD:
-
-```bash
-python scripts/prepare_textvqa_medical_subset.py --config config/config.yaml
-```
-
-This script is intended to:
-
-- load VQA-RAD directly from Hugging Face `datasets`
-- sample medical radiology VQA examples
-- normalize them into `image / question / answer / task_type`
-- save selected images locally under `data/processed/`
-
-Use `train` only by default, or include test too:
+Or use multiple splits:
 
 ```bash
 python scripts/prepare_textvqa_medical_subset.py --splits train,test
 ```
 
+### 3. Prepare MedQuAD
+
+```bash
+python scripts/prepare_medquad.py
+```
+
+### 4. Merge and shuffle all datasets
+
+```bash
+python scripts/merge_datasets.py
+```
+
+## Previewing Data
+
+Preview processed files:
+
+```bash
+python scripts/preview_data.py \
+  --source jsonl \
+  --jsonl-path data/processed/healmqa_500.jsonl \
+  --limit 5
+```
+
+Preview the merged dataset:
+
+```bash
+python scripts/preview_data.py \
+  --source jsonl \
+  --jsonl-path data/processed/train_merged.jsonl \
+  --limit 10
+```
+
+## Training
+
+The current training code is still a scaffold. The intended entry point is:
+
+```bash
+python scripts/train.py --config config/config.yaml
+```
+
+Model and trainer modules intentionally contain TODO comments for:
+
+- image encoder replacement
+- routing logic
+- multimodal fusion
+- expert selection
+- generation and optimization
+
 ## Notes
 
-- This project is a scaffold, not a finished system.
-- The code is intentionally minimal and incomplete.
-- TODO comments explain expected inputs, outputs, and extension points.
+- This repository is still a scaffold, not a finished implementation.
+- Data preparation is more complete than model training at the moment.
+- The main goal is to keep the code readable, modular, and easy to extend for experiments.
