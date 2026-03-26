@@ -12,6 +12,15 @@ data:
     output_path: data/processed/vqa_rad_500.jsonl
     image_output_dir: data/processed/vqa_rad_500_images
     sample_size: 500
+  healmqa:
+    annotations_path: data/raw/share healmqa/HealMQA_500.json
+    image_dir: data/raw/share healmqa/images_500
+    output_path: data/processed/healmqa_500.jsonl
+    image_output_dir: data/processed/healmqa_500_images
+  medquad:
+    dataset_name: Tonic/medquad
+    output_path: data/processed/medquad_500.jsonl
+    sample_size: 500
 
 model:
   hidden_dim: 256

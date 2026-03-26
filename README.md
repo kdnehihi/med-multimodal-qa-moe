@@ -60,6 +60,18 @@ python scripts/preprocess.py --input data/raw/your_data.jsonl
 python scripts/train.py --config config/config.yaml
 ```
 
+Prepare HealMQA symptom-image QA data:
+
+```bash
+python scripts/prepare_healmqa.py
+```
+
+Prepare text-only medical QA data:
+
+```bash
+python scripts/prepare_medquad.py
+```
+
 Preview raw TextVQA samples:
 
 ```bash
