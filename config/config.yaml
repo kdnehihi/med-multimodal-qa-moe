@@ -6,6 +6,12 @@ data:
   raw_dir: data/raw
   processed_dir: data/processed
   image_size: 224
+  vqa_rad:
+    dataset_name: flaviagiammarino/vqa-rad
+    splits: train
+    output_path: data/processed/vqa_rad_500.jsonl
+    image_output_dir: data/processed/vqa_rad_500_images
+    sample_size: 500
 
 model:
   hidden_dim: 256

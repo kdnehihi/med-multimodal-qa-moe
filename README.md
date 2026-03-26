@@ -60,6 +60,37 @@ python scripts/preprocess.py --input data/raw/your_data.jsonl
 python scripts/train.py --config config/config.yaml
 ```
 
+Preview raw TextVQA samples:
+
+```bash
+python scripts/preview_data.py --source hf --splits train --limit 5
+```
+
+Preview exported medical subset samples:
+
+```bash
+python scripts/preview_data.py --source jsonl --jsonl-path data/processed/textvqa_medical_500.jsonl --limit 5
+```
+
+Prepare a medical subset from VQA-RAD:
+
+```bash
+python scripts/prepare_textvqa_medical_subset.py --config config/config.yaml
+```
+
+This script is intended to:
+
+- load VQA-RAD directly from Hugging Face `datasets`
+- sample medical radiology VQA examples
+- normalize them into `image / question / answer / task_type`
+- save selected images locally under `data/processed/`
+
+Use `train` only by default, or include test too:
+
+```bash
+python scripts/prepare_textvqa_medical_subset.py --splits train,test
+```
+
 ## Notes
 
 - This project is a scaffold, not a finished system.
