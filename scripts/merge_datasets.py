@@ -21,9 +21,9 @@ def parse_args() -> argparse.Namespace:
         "--inputs",
         nargs="+",
         default=[
-            "data/processed/healmqa_500.jsonl",
-            "data/processed/vqa_rad_500.jsonl",
-            "data/processed/medquad_500.jsonl",
+            "data/processed/healmqa_1500.jsonl",
+            "data/processed/vqa_rad_1500.jsonl",
+            "data/processed/medquad_2000.jsonl",
         ],
         help="Input JSONL files to merge.",
     )

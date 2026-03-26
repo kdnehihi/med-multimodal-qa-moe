@@ -145,6 +145,12 @@ pip install -r requirements.txt
 python scripts/prepare_healmqa.py
 ```
 
+Optional: augment each HealMQA image with two extra independent QA pairs:
+
+```bash
+python scripts/augment_healmqa.py
+```
+
 ### 2. Prepare VQA-RAD
 
 ```bash
