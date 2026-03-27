@@ -1,4 +1,4 @@
-"""Dataset skeleton for multimodal medical QA."""
+"""Dataset utilities for baseline multimodal medical QA training."""
 
 from __future__ import annotations
 
@@ -11,14 +11,13 @@ from utils.helpers import load_jsonl
 
 
 class MedicalDataset(Dataset):
-    """Minimal dataset scaffold for symptom, text_image, and qa tasks.
+    """Simple JSONL-backed dataset.
 
-    Expected JSONL format:
+    Expected input schema:
     {
-        "image": "path_or_none",
+        "image": "path_or_null",
         "question": "...",
-        "answer": "...",
-        "task_type": "symptom" | "text_image" | "qa"
+        "answer": "..."
     }
     """
 
@@ -26,31 +25,15 @@ class MedicalDataset(Dataset):
         self.data_path = Path(data_path)
         self.samples = load_jsonl(self.data_path)
 
-        # TODO: initialize tokenizer and image transforms here.
-        # Expected components:
-        # - question tokenizer
-        # - answer tokenizer
-        # - image preprocessing pipeline
-
     def __len__(self) -> int:
         return len(self.samples)
 
     def __getitem__(self, index: int) -> dict[str, Any]:
         sample = self.samples[index]
-
-        # TODO: load image if the sample contains an image path.
-        # Expected output:
-        # - image tensor for multimodal tasks
-        # - None or placeholder for text-only qa
-        image = sample.get("image")
-
-        # TODO: tokenize / preprocess question and answer.
-        question = sample.get("question", "")
-        answer = sample.get("answer", "")
-
+        image_value = sample.get("image")
+        image_path = None if image_value in (None, "", "null") else str(image_value)
         return {
-            "image": image,
-            "question": question,
-            "answer": answer,
-            "task_type": sample.get("task_type", "qa"),
+            "image": image_path,
+            "question": str(sample.get("question", "")).strip(),
+            "answer": str(sample.get("answer", "")).strip(),
         }

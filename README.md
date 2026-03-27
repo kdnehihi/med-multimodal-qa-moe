@@ -1,6 +1,6 @@
 # medical-moe-assistant
 
-Research scaffold for a lightweight multimodal medical QA project with a two-stage MoE-inspired architecture.
+Lightweight multimodal medical QA research repo with a runnable baseline and a two-stage MoE-inspired direction.
 
 ## Overview
 
@@ -10,11 +10,12 @@ This project studies a compact medical assistant that supports three QA settings
 - `xray`: radiology image + question -> answer
 - `qa`: text-only medical question -> answer
 
-The repository is intentionally research-oriented and lightweight. The current codebase focuses on:
+The repository is intentionally research-oriented and lightweight. The current codebase now includes:
 
-- clean data preparation
-- reproducible dataset conversion
-- a minimal model scaffold with clear extension points
+- clean and reproducible data preparation
+- a merged multi-task training set
+- a runnable baseline using `BiomedCLIP + FLAN-T5-base`
+- utilities for checkpointing and qualitative prediction preview
 
 It is not a production medical system.
 
@@ -26,21 +27,21 @@ The project currently uses three sources:
    - task: `symptom`
    - local dataset under `data/raw/share healmqa/`
    - processed output:
-     - `data/processed/healmqa_500.jsonl`
+     - `data/processed/healmqa_1500.jsonl`
      - `data/processed/healmqa_500_images/`
 
 2. `VQA-RAD`
    - task: `xray`
    - loaded from Hugging Face: `flaviagiammarino/vqa-rad`
    - processed output:
-     - `data/processed/vqa_rad_500.jsonl`
-     - `data/processed/vqa_rad_500_images/`
+     - `data/processed/vqa_rad_1500.jsonl`
+     - `data/processed/vqa_rad_1500_images/`
 
 3. `MedQuAD`
    - task: `qa`
    - loaded from Hugging Face: `Tonic/medquad`
    - processed output:
-     - `data/processed/medquad_500.jsonl`
+     - `data/processed/medquad_2000.jsonl`
 
 After preparation, the three datasets can be merged and shuffled into:
 
@@ -182,7 +183,7 @@ Preview processed files:
 ```bash
 python scripts/preview_data.py \
   --source jsonl \
-  --jsonl-path data/processed/healmqa_500.jsonl \
+  --jsonl-path data/processed/healmqa_1500.jsonl \
   --limit 5
 ```
 
@@ -195,24 +196,59 @@ python scripts/preview_data.py \
   --limit 10
 ```
 
-## Training
+## Baseline Training
 
-The current training code is still a scaffold. The intended entry point is:
+The current runnable baseline is:
+
+- vision encoder: `microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224`
+- text model: `google/flan-t5-base`
+- fusion: one projected visual prefix token prepended to the text stream
+- training strategy:
+  - freeze the vision encoder
+  - freeze the T5 encoder
+  - train the decoder and lightweight fusion layers
+
+Default config is tuned for a relatively safe local run on Apple Silicon `mps`.
+
+Train with:
 
 ```bash
 python scripts/train.py --config config/config.yaml
 ```
 
-Model and trainer modules intentionally contain TODO comments for:
+Key defaults:
 
-- image encoder replacement
-- routing logic
-- multimodal fusion
-- expert selection
-- generation and optimization
+- `batch_size: 2`
+- `gradient_accumulation_steps: 4`
+- `epochs: 1`
+- `max_train_steps: 300`
+- `device: mps`
+
+Checkpoints are written under:
+
+- `outputs/checkpoints/baseline_biomedclip_flan_t5_base/`
+
+## Prediction Preview
+
+After training, preview a few validation predictions with the best checkpoint:
+
+```bash
+python scripts/predict_samples.py --config config/config.yaml
+```
+
+This prints:
+
+- image path
+- question
+- expected answer
+- predicted answer
+
+and saves a JSONL preview under:
+
+- `outputs/predictions/baseline_preview_predictions.jsonl`
 
 ## Notes
 
-- This repository is still a scaffold, not a finished implementation.
-- Data preparation is more complete than model training at the moment.
+- The baseline is intentionally simple so it can serve as a fair comparison point for the later MoE model.
+- The proposed MoE architecture has not been implemented yet; the current repo establishes the data pipeline and baseline training loop first.
 - The main goal is to keep the code readable, modular, and easy to extend for experiments.

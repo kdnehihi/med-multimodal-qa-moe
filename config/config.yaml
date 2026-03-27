@@ -1,8 +1,8 @@
 seed: 42
 
 data:
-  train_path: data/processed/train.jsonl
-  val_path: data/processed/val.jsonl
+  train_path: data/processed/train_merged.jsonl
+  val_ratio: 0.1
   raw_dir: data/raw
   processed_dir: data/processed
   image_size: 224
@@ -21,17 +21,27 @@ data:
   medquad:
     dataset_name: Tonic/medquad
     output_path: data/processed/medquad_2000.jsonl
-    sample_size: 1500
+    sample_size: 2000
 
 model:
-  hidden_dim: 256
-  instruction_dim: 384
-  adapter_dim: 64
-  vision_encoder_name: clip-vit-base-patch32
-  language_model_name: t5-small
+  vision_model_name: microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224
+  text_model_name: google/flan-t5-base
+  freeze_vision: true
+  freeze_text_encoder: true
 
 training:
-  batch_size: 4
-  epochs: 5
-  learning_rate: 0.0001
-  device: cuda
+  batch_size: 2
+  eval_batch_size: 2
+  gradient_accumulation_steps: 4
+  epochs: 1
+  max_train_steps: 300
+  eval_steps: 50
+  log_steps: 10
+  learning_rate: 1.0e-4
+  weight_decay: 0.01
+  max_question_length: 96
+  max_answer_length: 64
+  gradient_checkpointing: true
+  num_workers: 0
+  device: mps
+  output_dir: outputs/checkpoints/baseline_biomedclip_flan_t5_base

@@ -39,7 +39,9 @@ def load_jsonl(path: str | Path) -> list[dict]:
 
 def write_jsonl(records: list[dict], path: str | Path) -> None:
     """Write records to a JSONL file."""
-    with Path(path).open("w", encoding="utf-8") as file:
+    output_path = Path(path)
+    ensure_dir(output_path.parent)
+    with output_path.open("w", encoding="utf-8") as file:
         for record in records:
             file.write(json.dumps(record, ensure_ascii=False) + "\n")
 
