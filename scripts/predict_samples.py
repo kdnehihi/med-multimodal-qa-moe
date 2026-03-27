@@ -54,7 +54,7 @@ def main() -> None:
     parser.add_argument(
         "--checkpoint",
         type=str,
-        default="outputs/checkpoints/baseline_biomedclip_flan_t5_base/best_baseline.pt",
+        default="outputs/checkpoints/query_router_biomedclip_dinov2_flan_t5_base/best_baseline.pt",
         help="Path to a saved checkpoint.",
     )
     parser.add_argument("--num-samples", type=int, default=8, help="Number of validation samples to preview.")
@@ -87,6 +87,7 @@ def main() -> None:
 
     model = MedicalMoEModel(
         vision_model_name=config["model"]["vision_model_name"],
+        second_vision_model_name=config["model"]["second_vision_model_name"],
         text_model_name=config["model"]["text_model_name"],
         max_question_length=int(config["training"]["max_question_length"]),
         max_answer_length=int(config["training"]["max_answer_length"]),

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import torch
 from torch import nn
 
 
@@ -27,14 +28,12 @@ class Router(nn.Module):
 
     def forward(self, instruction_embedding):
         """Predict routing outputs from an instruction embedding."""
-        # TODO: implement full router logic.
-        # Suggested steps:
-        # 1. run instruction embedding through MLP
-        # 2. produce 2 logits for vision routing
-        # 3. produce 3 logits for adapter routing
-        # 4. optionally apply softmax outside or inside this module
         hidden = self.backbone(instruction_embedding)
+        vision_logits = self.vision_head(hidden)
+        adapter_logits = self.adapter_head(hidden)
         return {
-            "vision_logits": self.vision_head(hidden),
-            "adapter_logits": self.adapter_head(hidden),
+            "vision_logits": vision_logits,
+            "vision_weights": torch.softmax(vision_logits, dim=-1),
+            "adapter_logits": adapter_logits,
+            "adapter_weights": torch.softmax(adapter_logits, dim=-1),
         }

@@ -25,6 +25,7 @@ data:
 
 model:
   vision_model_name: microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224
+  second_vision_model_name: facebook/dinov2-base
   text_model_name: google/flan-t5-base
   freeze_vision: true
   freeze_text_encoder: true
@@ -33,8 +34,8 @@ training:
   batch_size: 2
   eval_batch_size: 2
   gradient_accumulation_steps: 4
-  epochs: 1
-  max_train_steps: 300
+  epochs: 5
+  max_train_steps: 2000
   eval_steps: 50
   log_steps: 10
   learning_rate: 1.0e-4
@@ -44,4 +45,4 @@ training:
   gradient_checkpointing: true
   num_workers: 0
   device: mps
-  output_dir: outputs/checkpoints/baseline_biomedclip_flan_t5_base
+  output_dir: outputs/checkpoints/query_router_biomedclip_dinov2_flan_t5_base

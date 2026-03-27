@@ -103,6 +103,7 @@ def main() -> None:
 
     model = MedicalMoEModel(
         vision_model_name=config["model"]["vision_model_name"],
+        second_vision_model_name=config["model"]["second_vision_model_name"],
         text_model_name=config["model"]["text_model_name"],
         max_question_length=int(config["training"]["max_question_length"]),
         max_answer_length=int(config["training"]["max_answer_length"]),

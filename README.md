@@ -15,6 +15,7 @@ The repository is intentionally research-oriented and lightweight. The current c
 - clean and reproducible data preparation
 - a merged multi-task training set
 - a runnable baseline using `BiomedCLIP + FLAN-T5-base`
+- a query-routed soft vision mixture using `BiomedCLIP + DINOv2 + FLAN-T5-base`
 - utilities for checkpointing and qualitative prediction preview
 
 It is not a production medical system.
@@ -196,17 +197,21 @@ python scripts/preview_data.py \
   --limit 10
 ```
 
-## Baseline Training
+## Training
 
-The current runnable baseline is:
+The current runnable model is:
 
-- vision encoder: `microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224`
+- vision encoder A: `microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224`
+- vision encoder B: `facebook/dinov2-base`
 - text model: `google/flan-t5-base`
-- fusion: one projected visual prefix token prepended to the text stream
+- router input: pooled query embedding from the text encoder
+- router output: `softmax([w1, w2])`
+- visual mixture:
+  - `v_mix = w1 * proj(BiomedCLIP(image)) + w2 * proj(DINOv2(image))`
 - training strategy:
-  - freeze the vision encoder
+  - freeze both vision encoders
   - freeze the T5 encoder
-  - train the decoder and lightweight fusion layers
+  - train the router, projector layers, and trainable T5-side modules
 
 Default config is tuned for a relatively safe local run on Apple Silicon `mps`.
 
@@ -220,13 +225,26 @@ Key defaults:
 
 - `batch_size: 2`
 - `gradient_accumulation_steps: 4`
-- `epochs: 1`
-- `max_train_steps: 300`
+- `epochs: 5`
+- `max_train_steps: 2000`
 - `device: mps`
 
 Checkpoints are written under:
 
-- `outputs/checkpoints/baseline_biomedclip_flan_t5_base/`
+- `outputs/checkpoints/query_router_biomedclip_dinov2_flan_t5_base/`
+
+## Current Results
+
+Observed validation loss on the merged multi-task split:
+
+- shared single-vision baseline (`BiomedCLIP + FLAN-T5-base`): best observed `val_loss ≈ 2.2530`
+- query-routed dual-vision model (`BiomedCLIP + DINOv2 + FLAN-T5-base`): best observed `val_loss ≈ 2.0605`
+
+Current interpretation:
+
+- the query-routed visual mixture clearly improves over the single-vision baseline
+- most gains happen during the first two to three epochs
+- later training starts to plateau, so the next useful step is better routing analysis or the second-stage hard expert routing
 
 ## Prediction Preview
 
@@ -249,6 +267,6 @@ and saves a JSONL preview under:
 
 ## Notes
 
-- The baseline is intentionally simple so it can serve as a fair comparison point for the later MoE model.
-- The proposed MoE architecture has not been implemented yet; the current repo establishes the data pipeline and baseline training loop first.
+- The current repo now contains a first-stage soft vision router.
+- The second-stage hard expert routing remains the next major milestone.
 - The main goal is to keep the code readable, modular, and easy to extend for experiments.

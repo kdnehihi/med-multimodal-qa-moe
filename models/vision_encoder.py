@@ -6,16 +6,11 @@ from typing import Any
 
 import torch
 from torch import Tensor, nn
-from transformers import AutoModel, AutoProcessor
+from transformers import AutoImageProcessor, AutoModel, AutoProcessor
 
 
 class VisionEncoder(nn.Module):
-    """Wrapper around a pretrained vision-language image tower.
-
-    The baseline uses BiomedCLIP as a frozen image encoder and only consumes
-    its pooled image embedding for downstream projection into the T5 hidden
-    space.
-    """
+    """Wrapper around a pretrained image tower."""
 
     def __init__(self, model_name: str) -> None:
         super().__init__()
@@ -23,6 +18,7 @@ class VisionEncoder(nn.Module):
         self.processor = None
         self.image_transform = None
         self.uses_open_clip = "biomedclip" in model_name.lower()
+        self.uses_auto_image_processor = "dinov2" in model_name.lower()
 
         if self.uses_open_clip:
             try:
@@ -38,7 +34,10 @@ class VisionEncoder(nn.Module):
             )
             self.output_dim = self._infer_open_clip_output_dim()
         else:
-            self.processor = AutoProcessor.from_pretrained(model_name, trust_remote_code=True)
+            if self.uses_auto_image_processor:
+                self.processor = AutoImageProcessor.from_pretrained(model_name, trust_remote_code=True)
+            else:
+                self.processor = AutoProcessor.from_pretrained(model_name, trust_remote_code=True)
             self.backbone = AutoModel.from_pretrained(model_name, trust_remote_code=True)
             if hasattr(self.backbone.config, "projection_dim"):
                 self.output_dim = int(self.backbone.config.projection_dim)
@@ -93,6 +92,8 @@ class VisionEncoder(nn.Module):
             return outputs.image_embeds
         if hasattr(outputs, "pooler_output") and outputs.pooler_output is not None:
             return outputs.pooler_output
+        if hasattr(outputs, "pooler_output") and outputs.pooler_output is None and hasattr(outputs, "last_hidden_state"):
+            return outputs.last_hidden_state[:, 0]
         if hasattr(outputs, "last_hidden_state") and outputs.last_hidden_state is not None:
             return outputs.last_hidden_state[:, 0]
 

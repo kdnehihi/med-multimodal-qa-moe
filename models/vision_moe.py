@@ -1,34 +1,27 @@
-"""Vision MoE scaffold with virtual experts."""
+"""Vision MoE utilities for combining two real visual experts."""
 
 from __future__ import annotations
 
-from torch import nn
+from torch import Tensor, nn
 
 
 class VisionMoE(nn.Module):
-    """Two virtual vision experts over a shared visual feature."""
+    """Softly combine two projected visual embeddings."""
 
-    def __init__(self, hidden_dim: int = 256) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.natural_image_head = nn.Linear(hidden_dim, hidden_dim)
-        self.text_image_head = nn.Linear(hidden_dim, hidden_dim)
 
-    def forward(self, features, routing_weights):
-        """Route a shared visual feature through two virtual experts.
+    def forward(self, feature_a: Tensor, feature_b: Tensor, routing_weights: Tensor) -> dict[str, Tensor]:
+        """Mix two vision expert outputs with soft routing weights."""
+        if routing_weights.dim() == 1:
+            routing_weights = routing_weights.unsqueeze(0)
 
-        Args:
-            features: Shared visual feature from the vision encoder.
-            routing_weights: Router output for the two virtual experts.
-        """
-        natural_feature = self.natural_image_head(features)
-        text_feature = self.text_image_head(features)
-
-        # TODO: implement weighted combination using routing_weights.
-        # Expected output:
-        # - one combined visual feature for downstream multimodal fusion
-        _ = routing_weights
+        combined_feature = (
+            routing_weights[:, 0:1] * feature_a
+            + routing_weights[:, 1:2] * feature_b
+        )
         return {
-            "natural_feature": natural_feature,
-            "text_feature": text_feature,
-            "combined_feature": None,
+            "feature_a": feature_a,
+            "feature_b": feature_b,
+            "combined_feature": combined_feature,
         }
