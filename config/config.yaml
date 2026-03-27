@@ -18,6 +18,7 @@ data:
     output_path: data/processed/healmqa_500.jsonl
     image_output_dir: data/processed/healmqa_500_images
     augmented_output_path: data/processed/healmqa_1500.jsonl
+    normalized_output_path: data/processed/healmqa_1500_normalized.jsonl
   medquad:
     dataset_name: Tonic/medquad
     output_path: data/processed/medquad_2000.jsonl
@@ -25,7 +26,7 @@ data:
 
 model:
   vision_model_name: microsoft/BiomedCLIP-PubMedBERT_256-vit_base_patch16_224
-  second_vision_model_name: facebook/dinov2-base
+  second_vision_model_name: google/siglip-base-patch16-224
   text_model_name: google/flan-t5-base
   freeze_vision: true
   freeze_text_encoder: true
@@ -45,4 +46,4 @@ training:
   gradient_checkpointing: true
   num_workers: 0
   device: mps
-  output_dir: outputs/checkpoints/query_router_biomedclip_dinov2_flan_t5_base
+  output_dir: outputs/checkpoints/query_router_biomedclip_siglip_flan_t5_base
